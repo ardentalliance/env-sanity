@@ -112,7 +112,8 @@ Schema example:
 		},
 		"SESSION_SECRET": {
 			"required": true,
-			"minLength": 32
+			"minLength": 32,
+			"placeholderAllowed": true
 		},
 		"NODE_ENV": {
 			"required": false,
