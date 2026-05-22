@@ -8,6 +8,7 @@ import (
 	"strings"
 )
 
+// defines rules, schema, levels
 type Rule struct {
 	Required      bool     `json:"required"`
 	MinLength     int      `json:"minLength"`
@@ -31,6 +32,7 @@ type Result struct {
 	Message string
 }
 
+// load schema file
 func LoadSchema(path string) (Schema, error) {
 	content, err := os.ReadFile(path)
 	if err != nil {
@@ -45,12 +47,14 @@ func LoadSchema(path string) (Schema, error) {
 	return schema, nil
 }
 
+// validate env file based on values set in schema
 func Validate(env map[string]string, schema Schema) []Result {
 	results := make([]Result, 0, len(schema))
 
 	for key, rule := range schema {
 		value, exists := env[key]
 
+		// required value, not set
 		if rule.Required && (!exists || value == "") {
 			results = append(results, Result{
 				Level:   LevelFail,
@@ -60,6 +64,7 @@ func Validate(env map[string]string, schema Schema) []Result {
 			continue
 		}
 
+		// optional value, not set
 		if !exists || value == "" {
 			results = append(results, Result{
 				Level:   LevelWarn,
@@ -69,6 +74,7 @@ func Validate(env map[string]string, schema Schema) []Result {
 			continue
 		}
 
+		// value too short
 		if rule.MinLength > 0 && len(value) < rule.MinLength {
 			results = append(results, Result{
 				Level:   LevelFail,
@@ -78,6 +84,7 @@ func Validate(env map[string]string, schema Schema) []Result {
 			continue
 		}
 
+		// not one of the allowed values
 		if len(rule.AllowedValues) > 0 && !contains(rule.AllowedValues, value) {
 			results = append(results, Result{
 				Level:   LevelFail,
@@ -87,6 +94,7 @@ func Validate(env map[string]string, schema Schema) []Result {
 			continue
 		}
 
+		// wrong value type
 		if rule.Type != "" {
 			if err := validateType(value, rule.Type); err != nil {
 				results = append(results, Result{
@@ -108,6 +116,7 @@ func Validate(env map[string]string, schema Schema) []Result {
 	return results
 }
 
+// if any checks fail
 func HasFailures(results []Result) bool {
 	for _, result := range results {
 		if result.Level == LevelFail {
@@ -118,6 +127,7 @@ func HasFailures(results []Result) bool {
 	return false
 }
 
+// type validation
 func validateType(value string, expectedType string) error {
 	switch expectedType {
 	case "string":
@@ -138,6 +148,7 @@ func validateType(value string, expectedType string) error {
 	return nil
 }
 
+// value contains x
 func contains(values []string, wanted string) bool {
 	for _, value := range values {
 		if value == wanted {

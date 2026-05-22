@@ -7,6 +7,7 @@ import (
 	"strings"
 )
 
+// parse env file
 func Parse(path string) (map[string]string, error) {
 	file, err := os.Open(path)
 	if err != nil {
