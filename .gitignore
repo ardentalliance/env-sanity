@@ -30,3 +30,8 @@ go.work.sum
 # Editor/IDE
  .idea/
  .vscode/
+/.idea/env-sanity.iml
+/.idea/go.imports.xml
+/.idea/misc.xml
+/.idea/modules.xml
+/.idea/vcs.xml

@@ -10,10 +10,11 @@ import (
 
 // defines rules, schema, levels
 type Rule struct {
-	Required      bool     `json:"required"`
-	MinLength     int      `json:"minLength"`
-	AllowedValues []string `json:"allowedValues"`
-	Type          string   `json:"type"`
+	Required         bool     `json:"required"`
+	MinLength        int      `json:"minLength"`
+	AllowedValues    []string `json:"allowedValues"`
+	Type             string   `json:"type"`
+	AllowPlaceholder bool     `json:"allowPlaceholder"`
 }
 
 type Schema map[string]Rule
@@ -106,6 +107,15 @@ func Validate(env map[string]string, schema Schema) []Result {
 			}
 		}
 
+		// value looks like a placeholder
+		if !rule.AllowPlaceholder && looksLikeSensitiveKey(key) && looksLikePlaceholderSecret(value) {
+			results = append(results, Result{
+				Level:   LevelWarn,
+				Key:     key,
+				Message: "this value looks like a placeholder secret",
+			})
+		}
+
 		results = append(results, Result{
 			Level:   LevelOK,
 			Key:     key,
@@ -152,6 +162,61 @@ func validateType(value string, expectedType string) error {
 func contains(values []string, wanted string) bool {
 	for _, value := range values {
 		if value == wanted {
+			return true
+		}
+	}
+
+	return false
+}
+
+// value looks sensitive
+func looksLikeSensitiveKey(key string) bool {
+	upperKey := strings.ToUpper(key)
+
+	sensitiveMarkers := []string{
+		"SECRET",
+		"PASSWORD",
+		"TOKEN",
+		"API_KEY",
+		"PRIVATE_KEY",
+		"ACCESS_TOKEN",
+		"ACCESS_KEY",
+		"PRIVATE_TOKEN",
+		"PERSONAL_TOKEN",
+		"PERSONAL_ACCESS_TOKEN",
+		"PERSONAL_ACCESS_KEY",
+	}
+
+	for _, marker := range sensitiveMarkers {
+		if strings.Contains(upperKey, marker) {
+			return true
+		}
+	}
+
+	return false
+}
+
+// secret looks like a placeholder value
+func looksLikePlaceholderSecret(value string) bool {
+	normalized := strings.ToLower(strings.TrimSpace(value))
+
+	placeholderMarkers := []string{
+		"changeme",
+		"change-me",
+		"change_me",
+		"dev-only",
+		"password",
+		"example",
+		"placeholder",
+		"todo",
+		"dummy",
+		"test-secret",
+		"test-token",
+		"test-only",
+	}
+
+	for _, marker := range placeholderMarkers {
+		if strings.Contains(normalized, marker) {
 			return true
 		}
 	}

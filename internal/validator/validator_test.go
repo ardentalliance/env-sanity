@@ -75,3 +75,27 @@ func TestValidateValidValue(t *testing.T) {
 		t.Fatalf("Expected LevelOK, got %s", results[0].Level)
 	}
 }
+
+func TestValidateAllowsPlaceholderSecretWhenConfigured(t *testing.T) {
+	env := map[string]string{
+		"SESSION_SECRET": "this-is-a-dev-only-placeholder-secret",
+	}
+
+	schema := Schema{
+		"SESSION_SECRET": {
+			Required:         true,
+			MinLength:        16,
+			AllowPlaceholder: true,
+		},
+	}
+
+	results := Validate(env, schema)
+
+	if len(results) != 1 {
+		t.Fatalf("Expected 1 result, got %d", len(results))
+	}
+
+	if results[0].Level != LevelOK {
+		t.Fatalf("Expected LevelOK, got %s", results[0].Level)
+	}
+}
