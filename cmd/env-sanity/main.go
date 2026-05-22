@@ -27,6 +27,7 @@ func main() {
 	}
 }
 
+// run env file check
 func runCheck(args []string) {
 	checkCommand := flag.NewFlagSet("check", flag.ExitOnError)
 
@@ -39,9 +40,7 @@ func runCheck(args []string) {
 	}
 
 	envValues, err := envfile.Parse(*envPath)
-	fmt.Printf("DEBUG env path: %\n", *envPath)
-	fmt.Printf("DEBUG schema path: %\n", *schemaPath)
-	fmt.Printf("DEBUG env values: %#v\n", envValues)
+
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "FAIL ", err)
 		os.Exit(1)
@@ -68,6 +67,7 @@ func runCheck(args []string) {
 	}
 }
 
+// usage manual
 func printUsage() {
 	fmt.Println(`env-sanity
 
