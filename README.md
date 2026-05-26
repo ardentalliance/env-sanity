@@ -17,7 +17,10 @@ It checks for missing required variables, invalid values, and simple type mismat
   * [Example Usage](#example-usage)
     * [Use a different .env file](#use-a-different-env-file)
     * [Use a different schema file](#use-a-different-schema-file)
+    * [Print results as JSON](#print-results-as-json)
   * [Example Output](#example-output)
+    * [Standard Output](#standard-output)
+    * [JSON Output](#json-output)
   * [Quick-Start Guide](#quick-start-guide)
   * [Example Schema Format](#example-schema-format)
   * [Supported Schema Role Properties](#supported-schema-role-properties)
@@ -118,8 +121,15 @@ env-sanity check -env .env.file.location
 env-sanity check -schema config/env.schema.json
 ```
 
+### Print results as JSON
+
+```bash
+env-sanity check -json
+```
+
 ## Example Output
 
+### Standard Output
 ```bash
 OK    DATABASE_URL             is set
 FAIL  SESSION_SECRET           must be at least 32 characters
@@ -127,6 +137,32 @@ WARN  NODE_ENV                 is optional and not set
 OK    SMTP_PORT                is set
 WARN  FEATURE_FLAG_EMAIL       looks like a placeholder secret       
 ```
+### JSON Output
+```json
+[
+  {
+    "level": "OK",
+    "key": "DATABASE_URL",
+    "message": "is valid and set"
+  },
+  {
+    "level": "FAIL",
+    "key": "SESSION_SECRET",
+    "message": "must be at least 32 characters"
+  },
+  {
+    "level": "WARN",
+    "key": "NODE_ENV",
+    "message": "looks like a placeholder secret"
+  },
+  {
+    "level": "WARN",
+    "key": "SMTP_PORT",
+    "message": "is optional and not set"
+  }
+]
+```
+
 
 ---
 
@@ -210,9 +246,9 @@ go build -o env-sanity ./cmd/env-sanity
 
 ## Roadmap
 
-1. Add JSON Output
-2. Add .env.example generation
-3. Add GitHub Actions test workflow
+
+1. Add .env.example generation
+2. Add GitHub Actions test workflow
 
 ---
 
