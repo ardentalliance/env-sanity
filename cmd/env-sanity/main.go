@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"flag"
 	"fmt"
 	"os"
@@ -33,6 +34,7 @@ func runCheck(args []string) {
 
 	envPath := checkCommand.String("env", ".env", "Path to .env file")
 	schemaPath := checkCommand.String("schema", "env.schema.json", "Path to schema file")
+	jsonOutput := checkCommand.Bool("json", false, "Print validation results as JSON output")
 
 	if err := checkCommand.Parse(args); err != nil {
 		fmt.Fprintln(os.Stderr, err)
@@ -53,6 +55,22 @@ func runCheck(args []string) {
 	}
 
 	results := validator.Validate(envValues, schema)
+
+	if *jsonOutput {
+		output, err := json.MarshalIndent(results, "", "  ")
+		if err != nil {
+			fmt.Fprintln(os.Stderr, "FAIL could not create JSON output:", err)
+			os.Exit(1)
+		}
+
+		fmt.Println(string(output))
+
+		if validator.HasFailures(results) {
+			os.Exit(1)
+		}
+
+		return
+	}
 
 	fmt.Println()
 	fmt.Println("env-sanity")
@@ -87,6 +105,10 @@ Options:
 		allowed values, min lengths, and simple types.
 		Default: env.schema.json
 
+	-json
+		Print validation results as JSON output.
+		Useful for scripts, CI jobs, or automated checks.
+
 Expected files:
 	By default, env-sanity looks for these files in the current directory:
 		.env
@@ -95,15 +117,19 @@ Expected files:
 Examples:
 	Check the default .env file against the default schema file:
 
-    env-sanity check
+    	env-sanity check
 
 	Check a different environment file:
 
-	env-sanity check -env .env.local
+		env-sanity check -env .env.local
 
-Check a specific .env file against a specific schema file:
+	Check a specific .env file against a specific schema file:
 
-    env-sanity check -env .env.production -schema config/env.schema.json
+    	env-sanity check -env .env.production -schema config/env.schema.json
+
+	Print machine-readable JSON output:
+		
+		env-sanity check -json
 
 Schema example:
 	{

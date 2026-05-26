@@ -28,9 +28,9 @@ const (
 )
 
 type Result struct {
-	Level   Level
-	Key     string
-	Message string
+	Level   Level  `json:"level"`
+	Key     string `json:"key"`
+	Message string `json:"message"`
 }
 
 // load schema file
