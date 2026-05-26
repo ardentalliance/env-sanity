@@ -1,0 +1,88 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Test and build
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: Show Go version
+        run: go version
+
+      - name: Format check
+        run: |
+          test -z "$(gofmt -l .)"
+
+      - name: Run tests
+        run: go test ./...
+
+      - name: Build local Linux binary
+        run: go build -o dist/env-sanity-linux-amd64 ./cmd/env-sanity
+
+  build:
+    name: Build binaries
+    runs-on: ubuntu-22.04
+    needs: test
+
+    strategy:
+      matrix:
+        include:
+          - goos: linux
+            goarch: amd64
+            output: env-sanity-linux-amd64
+          - goos: linux
+            goarch: arm64
+            output: env-sanity-linux-arm64
+          - goos: darwin
+            goarch: amd64
+            output: env-sanity-macos-amd64
+          - goos: darwin
+            goarch: arm64
+            output: env-sanity-macos-arm64
+          - goos: windows
+            goarch: amd64
+            output: env-sanity-windows-amd64.exe
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: Build binary
+        env:
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
+        run: |
+          mkdir -p dist
+          go build -o "dist/${{ matrix.output }}" ./cmd/env-sanity
+
+      - name: Upload binary artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.output }}
+          path: dist/${{ matrix.output }}
+          retention-days: 7
